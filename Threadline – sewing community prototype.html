@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Threadline – sewing community prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --mat:#2F5D4A; --mat-line:rgba(255,255,255,.09); --tape:#F2C230; --tape-ink:#3A2E05;
+  --bg:#EEF1EC; --surface:#FFFFFF; --ink:#1F2A24; --muted:#5E6B63; --line:#D6DDD6;
+  --chip:#E3E9E3; --focus:#1C6DD0;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --mat:#1D3B2F; --mat-line:rgba(255,255,255,.06); --tape:#E8B923; --tape-ink:#2A2104;
+    --bg:#121815; --surface:#1B231F; --ink:#E6ECE7; --muted:#9AA79F; --line:#2D3832;
+    --chip:#26312B; --focus:#6AA8FF;
+  }
+}
+:root[data-theme="dark"]{
+  --mat:#1D3B2F; --mat-line:rgba(255,255,255,.06); --tape:#E8B923; --tape-ink:#2A2104;
+  --bg:#121815; --surface:#1B231F; --ink:#E6ECE7; --muted:#9AA79F; --line:#2D3832;
+  --chip:#26312B; --focus:#6AA8FF;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif}
+h1,h2,h3{font-family:"Bricolage Grotesque",system-ui,sans-serif;line-height:1.15;margin:0 0 .4em}
+h1{font-size:clamp(1.9rem,4vw,2.8rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:1.5rem;font-weight:700}
+h3{font-size:1.1rem;font-weight:700}
+a{color:inherit}
+img{max-width:100%}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* Header: cutting mat with a tape-measure edge */
+.top{background-color:var(--mat);color:#fff;
+  background-image:linear-gradient(var(--mat-line) 1px,transparent 1px),linear-gradient(90deg,var(--mat-line) 1px,transparent 1px);
+  background-size:24px 24px}
+.top-inner{max-width:1120px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:20px}
+.brand{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:1.45rem;text-decoration:none;letter-spacing:-.02em;margin-right:auto}
+.tabs{display:flex;gap:4px}
+.tabs a{display:flex;align-items:center;gap:6px;text-decoration:none;padding:8px 12px;border-radius:8px;font-weight:700;color:rgba(255,255,255,.85)}
+.tabs a:hover{background:rgba(255,255,255,.1);color:#fff}
+.tabs a.on{background:rgba(255,255,255,.16);color:#fff}
+.tape{height:18px;background-color:var(--tape);
+  background-image:repeating-linear-gradient(90deg,var(--tape-ink) 0 1px,transparent 1px 12px),
+                   repeating-linear-gradient(90deg,var(--tape-ink) 0 2px,transparent 2px 60px);
+  background-size:100% 6px,100% 11px;background-repeat:repeat-x;background-position:0 0,0 0}
+
+.btn{font:inherit;font-weight:700;border:0;border-radius:999px;padding:9px 18px;cursor:pointer;background:var(--chip);color:var(--ink)}
+.btn:hover{filter:brightness(.96)}
+.btn.primary{background:var(--tape);color:var(--tape-ink)}
+.btn.ghost{background:transparent;border:2px solid var(--line)}
+.btn.small{padding:6px 12px;font-size:.9rem}
+
+main{max-width:1120px;margin:0 auto;padding:28px 20px 60px}
+.intro{margin-bottom:22px;max-width:62ch}
+.intro p{color:var(--muted);margin:0}
+
+.filters{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 22px;padding:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.filters input,.filters select,dialog input,dialog select,dialog textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 12px}
+.filters input{flex:1 1 220px}
+.count{color:var(--muted);margin:-8px 0 14px;font-size:.95rem}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;text-decoration:none;display:flex;flex-direction:column}
+.card:hover{border-color:var(--muted)}
+.media{aspect-ratio:4/5;display:grid;place-items:center;font-size:3.2rem;background-size:cover;background-position:center}
+.media span{background:var(--surface);border-radius:50%;width:84px;height:84px;display:grid;place-items:center;box-shadow:0 0 0 6px rgba(255,255,255,.35)}
+.card-body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:4px;flex:1}
+.card-body .by{color:var(--muted);font-size:.92rem}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:8px}
+.tag{background:var(--chip);border-radius:6px;padding:2px 8px;font-size:.82rem}
+.tag.free{background:var(--tape);color:var(--tape-ink);font-weight:700}
+
+.detail{display:grid;grid-template-columns:minmax(0,380px) 1fr;gap:32px;margin-bottom:40px}
+.detail .media{border-radius:16px;border:1px solid var(--line)}
+.specs{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;margin:18px 0;padding:16px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.specs dt{color:var(--muted)}
+.specs dd{margin:0;font-weight:700}
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+.back{display:inline-block;margin-bottom:16px;color:var(--muted);text-decoration:none;font-weight:700}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 0 16px;flex-wrap:wrap}
+
+.make-notes{color:var(--muted);font-size:.92rem;margin:4px 0 0}
+.like{background:none;border:0;font:inherit;cursor:pointer;color:var(--muted);padding:0;align-self:flex-start;margin-top:6px}
+.like.on{color:#C2410C;font-weight:700}
+
+.designer-row{display:flex;gap:16px;align-items:center;padding:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:12px}
+.avatar{flex:none;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:1.3rem;color:#fff}
+.designer-row .info{flex:1;min-width:0}
+.designer-row p{margin:0;color:var(--muted)}
+
+.empty{padding:28px;text-align:center;background:var(--surface);border:2px dashed var(--line);border-radius:14px;color:var(--muted)}
+.stats{display:flex;gap:26px;margin:12px 0 26px;flex-wrap:wrap}
+.stats b{display:block;font-family:"Bricolage Grotesque",sans-serif;font-size:1.6rem}
+.stats span{color:var(--muted)}
+.demo-note{margin-top:40px;font-size:.9rem;color:var(--muted)}
+
+dialog{border:0;border-radius:18px;padding:0;width:min(520px,94vw);background:var(--surface);color:var(--ink)}
+dialog::backdrop{background:rgba(10,20,15,.55)}
+dialog form{padding:24px;display:flex;flex-direction:column;gap:14px}
+dialog label{display:flex;flex-direction:column;gap:5px;font-weight:700;font-size:.95rem}
+dialog label small{font-weight:400;color:var(--muted)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.dlg-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:6px}
+
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:700;opacity:0;pointer-events:none;transition:.25s;z-index:50}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media (max-width:720px){
+  .detail{grid-template-columns:1fr}
+  .detail .media{max-width:320px}
+  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--mat);display:grid;grid-template-columns:repeat(4,1fr);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+  .tabs a{flex-direction:column;gap:0;font-size:.75rem;padding:6px 2px}
+  .tabs .ico{font-size:1.25rem}
+  body{padding-bottom:76px}
+  .grid{grid-template-columns:repeat(2,1fr);gap:12px}
+  .media span{width:64px;height:64px;font-size:2.4rem}
+  .row2{grid-template-columns:1fr}
+  .toast{bottom:96px}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-inner">
+    <a class="brand" href="#/patterns">🧵 Threadline</a>
+    <nav class="tabs" aria-label="Main">
+      <a data-r="patterns" href="#/patterns"><span class="ico">📐</span>Patterns</a>
+      <a data-r="makes" href="#/makes"><span class="ico">📷</span>Makes</a>
+      <a data-r="designers" href="#/designers"><span class="ico">✂️</span>Designers</a>
+      <a data-r="me" href="#/me"><span class="ico">🪡</span>My sewing</a>
+    </nav>
+    <button class="btn primary" id="addBtn">+ Add a make</button>
+  </div>
+  <div class="tape" aria-hidden="true"></div>
+</header>
+
+<main id="app"></main>
+
+<dialog id="nameDlg">
+  <form id="nameForm">
+    <h2>Join Threadline</h2>
+    <p style="margin:0;color:var(--muted)">Pick a username to save makes, follow designers and build your sewing queue.</p>
+    <label>Username <input name="name" required maxlength="24" placeholder="e.g. sewsunny"></label>
+    <div class="dlg-actions">
+      <button type="button" class="btn ghost" data-close>Cancel</button>
+      <button class="btn primary">Join</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="makeDlg">
+  <form id="makeForm">
+    <h2>Add a make</h2>
+    <label>Photo <small>Optional. Add details later if you're in a hurry.</small>
+      <input type="file" name="photo" accept="image/*"></label>
+    <label>Pattern <select name="patternId" required></select></label>
+    <label>Title <input name="title" required maxlength="60" placeholder="My linen summer version"></label>
+    <div class="row2">
+      <label>Size made <input name="size" maxlength="20" placeholder="M, or 14"></label>
+      <label>Fabric <input name="fabric" maxlength="40" placeholder="Washed linen"></label>
+    </div>
+    <label>Notes and alterations <textarea name="notes" rows="3" maxlength="400" placeholder="Lengthened by 2 inches, added pockets…"></textarea></label>
+    <div class="dlg-actions">
+      <button type="button" class="btn ghost" data-close>Cancel</button>
+      <button class="btn primary" id="saveMakeBtn">Save make</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ---------- Sample data (in the real site this comes from Supabase) ---------- */
+const DESIGNERS = [
+  {id:"d1",name:"Willow Lane Patterns",bio:"Relaxed everyday basics in sizes XS–4X.",place:"Portland, USA",color:"#7A5C9E"},
+  {id:"d2",name:"Studio Marlow",bio:"Workwear-inspired unisex pieces.",place:"Glasgow, UK",color:"#2F6F8F"},
+  {id:"d3",name:"Hemline House",bio:"Free patterns for first-time sewists.",place:"Melbourne, Australia",color:"#B0542C"},
+  {id:"d4",name:"Loom & Needle Co.",bio:"Romantic silhouettes with clear instructions.",place:"Montréal, Canada",color:"#3F7D4E"}
+];
+const sw = (k,c1,c2)=>({k,c1,c2});
+const PATTERNS = [
+  {id:"p1",name:"Juniper Wrap Dress",d:"d1",type:"Dress",skill:"Beginner",fabric:"Knit",price:14,sizes:"XS–4X",yardage:"2.5–3.5 yd (60\" wide)",notions:"Clear elastic",desc:"A forgiving wrap dress with a tie waist. No zips or buttonholes.",sw:sw("dots","#8C6BB1","#F1E7FA")},
+  {id:"p2",name:"Harbor Button-Up",d:"d2",type:"Top",skill:"Intermediate",fabric:"Woven",price:16,sizes:"XS–3X",yardage:"2–2.75 yd (45\" wide)",notions:"8 buttons, interfacing",desc:"A boxy shirt with a two-piece collar and chest pocket.",sw:sw("stripe","#2F6F8F","#DDEBF2")},
+  {id:"p3",name:"Fern Wide-Leg Trousers",d:"d1",type:"Trousers",skill:"Intermediate",fabric:"Woven",price:15,sizes:"XS–4X",yardage:"2.25–3 yd (54\" wide)",notions:"Invisible zip, hook and eye",desc:"High-waisted trousers with deep pockets and a fly-free side zip.",sw:sw("solid","#6B7F4E","#6B7F4E")},
+  {id:"p4",name:"Market Pocket Tote",d:"d3",type:"Bag",skill:"Beginner",fabric:"Woven",price:0,sizes:"One size",yardage:"1 yd (45\" wide)",notions:"None",desc:"A sturdy lined tote. A great first project.",sw:sw("gingham","#B0542C","#FBE9DF")},
+  {id:"p5",name:"Maple Raglan Tee",d:"d3",type:"Top",skill:"Beginner",fabric:"Knit",price:0,sizes:"XXS–5X",yardage:"1.25–2 yd (60\" wide)",notions:"None",desc:"A simple raglan tee that works on a regular sewing machine.",sw:sw("stripe","#C9A227","#FFF6D6")},
+  {id:"p6",name:"Cedar Chore Coat",d:"d2",type:"Outerwear",skill:"Advanced",fabric:"Woven",price:20,sizes:"XS–3X",yardage:"3–3.75 yd (54\" wide)",notions:"5 buttons, interfacing",desc:"An unlined chore coat with flat-felled seams and patch pockets.",sw:sw("gingham","#34495E","#D5DEE7")},
+  {id:"p7",name:"Linden Midi Skirt",d:"d4",type:"Skirt",skill:"Beginner",fabric:"Woven",price:12,sizes:"XS–4X",yardage:"1.75–2.5 yd (45\" wide)",notions:"1\" elastic",desc:"A gathered elastic-waist skirt with in-seam pockets.",sw:sw("dots","#3F7D4E","#E3F1E6")},
+  {id:"p8",name:"Aster Tiered Dress",d:"d4",type:"Dress",skill:"Intermediate",fabric:"Woven",price:18,sizes:"XS–4X",yardage:"3.5–4.5 yd (45\" wide)",notions:"Shirring elastic",desc:"A three-tier dress with a shirred bodice and flutter sleeves.",sw:sw("stripe","#B55A7A","#FBE3EC")},
+  {id:"p9",name:"Birch Wool Coat",d:"d4",type:"Outerwear",skill:"Advanced",fabric:"Woven",price:24,sizes:"XS–3X",yardage:"3.5 yd wool + 2.5 yd lining",notions:"Shoulder pads, 3 buttons",desc:"A fully lined, tailored coat with a notched collar.",sw:sw("solid","#7B5B45","#7B5B45")}
+];
+const SEED_MAKES = [
+  {id:"m1",user:"sewsunny",patternId:"p1",title:"Sunday wrap dress",size:"M",fabric:"Rayon jersey",notes:"Lengthened the skirt by 2 inches.",likes:24,sw:sw("dots","#5B7DB1","#E6EEF9")},
+  {id:"m2",user:"bobbinbee",patternId:"p5",title:"Striped raglan",size:"2X",fabric:"Cotton-spandex",notes:"Sized down one at the neckband.",likes:17,sw:sw("stripe","#1F2A24","#F2F2F2")},
+  {id:"m3",user:"marta.makes",patternId:"p3",title:"Linen Fern trousers",size:"14",fabric:"Washed linen",notes:"Took 1\" off the rise, added belt loops.",likes:41,sw:sw("solid","#C2A27A","#C2A27A")},
+  {id:"m4",user:"sewsunny",patternId:"p4",title:"Farmers market tote",size:"—",fabric:"Canvas",notes:"Made in one afternoon.",likes:9,sw:sw("gingham","#2F5D4A","#E1EFE8")},
+  {id:"m5",user:"threadandtea",patternId:"p8",title:"Garden party Aster",size:"L",fabric:"Cotton lawn",notes:"Added a fourth tier.",likes:56,sw:sw("dots","#D0707A","#FFF1F2")},
+  {id:"m6",user:"bobbinbee",patternId:"p6",title:"Corduroy chore coat",size:"XL",fabric:"Wide-wale corduroy",notes:"Full bicep adjustment, lined the pockets.",likes:33,sw:sw("stripe","#7A4E2D","#9C6B45")}
+];
+const ICON = {Dress:"👗",Top:"👚",Trousers:"👖",Skirt:"🪡",Outerwear:"🧥",Bag:"👜"};
+
+/* ---------- State, saved in this browser ---------- */
+const KEY = "threadline-demo-v1";
+let state = load();
+function load(){
+  try{ const s = JSON.parse(localStorage.getItem(KEY)); if(s && s.makes) return s; }catch(e){}
+  return {user:null, makes:[], saved:[], following:[], liked:[]};
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(state)); return true; }
+  catch(e){ return false; }
+}
+const allMakes = ()=> [...state.makes, ...SEED_MAKES];
+const pat = id => PATTERNS.find(p=>p.id===id);
+const des = id => DESIGNERS.find(d=>d.id===id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ---------- Helpers ---------- */
+function swatchCss(s){
+  if(s.k==="stripe") return `background-image:repeating-linear-gradient(45deg,${s.c1} 0 14px,${s.c2} 14px 28px)`;
+  if(s.k==="dots") return `background-color:${s.c2};background-image:radial-gradient(${s.c1} 22%,transparent 23%);background-size:22px 22px`;
+  if(s.k==="gingham") return `background-color:${s.c2};background-image:linear-gradient(90deg,${s.c1}88 50%,transparent 50%),linear-gradient(${s.c1}88 50%,transparent 50%);background-size:28px 28px`;
+  return `background-color:${s.c1}`;
+}
+function media(item, type){
+  if(item.photo) return `<div class="media" style="background-image:url('${item.photo}')" role="img" aria-label="${esc(item.title)}"></div>`;
+  return `<div class="media" style="${swatchCss(item.sw)}" aria-hidden="true"><span>${ICON[type]}</span></div>`;
+}
+const priceTag = p => p.price ? `<span class="tag">$${p.price}</span>` : `<span class="tag free">Free</span>`;
+function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2200); }
+function requireUser(then){
+  if(state.user) return then();
+  pendingAfterJoin = then;
+  document.getElementById("nameDlg").showModal();
+}
+let pendingAfterJoin = null;
+
+function patternCard(p){
+  const n = allMakes().filter(m=>m.patternId===p.id).length;
+  return `<a class="card" href="#/pattern/${p.id}">
+    ${media(p,p.type)}
+    <div class="card-body">
+      <h3>${esc(p.name)}</h3>
+      <div class="by">${esc(des(p.d).name)}</div>
+      <div class="tags">${priceTag(p)}<span class="tag">${p.skill}</span><span class="tag">${p.fabric}</span><span class="tag">${n} makes</span></div>
+    </div></a>`;
+}
+function makeCard(m){
+  const p = pat(m.patternId); const liked = state.liked.includes(m.id);
+  const likes = (m.likes||0) + (liked?1:0);
+  return `<div class="card">
+    ${media(m,p.type)}
+    <div class="card-body">
+      <h3>${esc(m.title)}</h3>
+      <div class="by">by @${esc(m.user)} · <a href="#/pattern/${p.id}">${esc(p.name)}</a></div>
+      ${m.size||m.fabric ? `<div class="tags">${m.size?`<span class="tag">Size ${esc(m.size)}</span>`:""}${m.fabric?`<span class="tag">${esc(m.fabric)}</span>`:""}</div>`:""}
+      ${m.notes?`<p class="make-notes">${esc(m.notes)}</p>`:""}
+      <button class="like ${liked?"on":""}" data-like="${m.id}" aria-pressed="${liked}">♥ ${likes}</button>
+    </div></div>`;
+}
+
+/* ---------- Views ---------- */
+const filters = {q:"",type:"",skill:"",fabric:"",price:""};
+function viewPatterns(){
+  const opt = (arr,sel)=>arr.map(v=>`<option ${sel===v?"selected":""}>${v}</option>`).join("");
+  return `<div class="intro"><h1>Find your next pattern</h1><p>Browse patterns from independent designers and see how they turned out for real sewists.</p></div>
+  <div class="filters" role="search">
+    <input id="fq" type="search" placeholder="Search patterns or designers" value="${esc(filters.q)}" aria-label="Search">
+    <select id="ftype" aria-label="Garment type"><option value="">All garments</option>${opt(Object.keys(ICON),filters.type)}</select>
+    <select id="fskill" aria-label="Skill level"><option value="">Any skill level</option>${opt(["Beginner","Intermediate","Advanced"],filters.skill)}</select>
+    <select id="ffabric" aria-label="Fabric type"><option value="">Knit or woven</option>${opt(["Knit","Woven"],filters.fabric)}</select>
+    <select id="fprice" aria-label="Price"><option value="">Free and paid</option><option value="free" ${filters.price==="free"?"selected":""}>Free only</option><option value="paid" ${filters.price==="paid"?"selected":""}>Paid only</option></select>
+  </div>
+  <div id="presults"></div>`;
+}
+function renderPatternResults(){
+  const q = filters.q.toLowerCase();
+  const list = PATTERNS.filter(p =>
+    (!q || (p.name+" "+des(p.d).name+" "+p.type).toLowerCase().includes(q)) &&
+    (!filters.type || p.type===filters.type) &&
+    (!filters.skill || p.skill===filters.skill) &&
+    (!filters.fabric || p.fabric===filters.fabric) &&
+    (!filters.price || (filters.price==="free" ? !p.price : p.price>0)));
+  document.getElementById("presults").innerHTML = list.length
+    ? `<p class="count">${list.length} pattern${list.length>1?"s":""}</p><div class="grid">${list.map(patternCard).join("")}</div>`
+    : `<div class="empty">No patterns match these filters. Try removing one.</div>`;
+}
+function viewPattern(id){
+  const p = pat(id); if(!p) return `<div class="empty">This pattern doesn't exist. <a href="#/patterns">Browse patterns</a></div>`;
+  const d = des(p.d); const makes = allMakes().filter(m=>m.patternId===id);
+  const saved = state.saved.includes(id);
+  return `<a class="back" href="#/patterns">← All patterns</a>
+  <div class="detail">
+    ${media(p,p.type)}
+    <div>
+      <h1>${esc(p.name)}</h1>
+      <p>by <a href="#/designer/${d.id}"><b>${esc(d.name)}</b></a></p>
+      <p>${esc(p.desc)}</p>
+      <dl class="specs">
+        <dt>Skill level</dt><dd>${p.skill}</dd>
+        <dt>Fabric</dt><dd>${p.fabric}</dd>
+        <dt>Sizes</dt><dd>${p.sizes}</dd>
+        <dt>Yardage</dt><dd>${p.yardage}</dd>
+        <dt>Notions</dt><dd>${p.notions}</dd>
+      </dl>
+      <div class="actions">
+        <button class="btn primary" data-buy="${p.id}">${p.price?`Buy PDF for $${p.price}`:"Download free PDF"}</button>
+        <button class="btn ghost" data-save="${p.id}" aria-pressed="${saved}">${saved?"✓ In your queue":"Add to sewing queue"}</button>
+      </div>
+    </div>
+  </div>
+  <div class="section-head"><h2>Makes of this pattern (${makes.length})</h2><button class="btn small" data-addfor="${p.id}">+ Add your make</button></div>
+  ${makes.length?`<div class="grid">${makes.map(makeCard).join("")}</div>`:`<div class="empty">Nobody has shared a make yet. Be the first.</div>`}`;
+}
+function viewMakes(){
+  return `<div class="intro"><h1>Latest makes</h1><p>Finished projects from the community, with the size, fabric and changes each sewist used.</p></div>
+  <div class="grid">${allMakes().map(makeCard).join("")}</div>`;
+}
+function viewDesigners(){
+  return `<div class="intro"><h1>Designers</h1><p>Follow designers to hear about new releases and pattern tests.</p></div>
+  ${DESIGNERS.map(designerRow).join("")}`;
+}
+function designerRow(d){
+  const f = state.following.includes(d.id);
+  const n = PATTERNS.filter(p=>p.d===d.id).length;
+  return `<div class="designer-row">
+    <div class="avatar" style="background:${d.color}">${d.name[0]}</div>
+    <div class="info"><h3><a href="#/designer/${d.id}">${esc(d.name)}</a></h3><p>${esc(d.bio)} ${n} patterns, ${esc(d.place)}.</p></div>
+    <button class="btn small ${f?"":"primary"}" data-follow="${d.id}" aria-pressed="${f}">${f?"Following":"Follow"}</button>
+  </div>`;
+}
+function viewDesigner(id){
+  const d = des(id); if(!d) return `<div class="empty">Designer not found.</div>`;
+  return `<a class="back" href="#/designers">← All designers</a>${designerRow(d)}
+  <h2 style="margin-top:24px">Patterns</h2><div class="grid">${PATTERNS.filter(p=>p.d===id).map(patternCard).join("")}</div>`;
+}
+function viewMe(){
+  if(!state.user) return `<div class="empty"><h2>Your sewing space</h2><p>Keep your makes, sewing queue and favorite designers in one place.</p><button class="btn primary" id="joinBtn">Join Threadline</button></div>`;
+  const mine = state.makes.filter(m=>m.user===state.user);
+  const queue = state.saved.map(pat).filter(Boolean);
+  const follows = state.following.map(des).filter(Boolean);
+  return `<h1>Hi, @${esc(state.user)}</h1>
+  <div class="stats"><div><b>${mine.length}</b><span>makes</span></div><div><b>${queue.length}</b><span>in queue</span></div><div><b>${follows.length}</b><span>following</span></div></div>
+  <div class="section-head"><h2>My makes</h2><button class="btn small primary" data-addfor="">+ Add a make</button></div>
+  ${mine.length?`<div class="grid">${mine.map(makeCard).join("")}</div>`:`<div class="empty">You haven't added a make yet. Share something you've sewn, even a quick tote.</div>`}
+  <h2 style="margin-top:32px">Sewing queue</h2>
+  ${queue.length?`<div class="grid">${queue.map(patternCard).join("")}</div>`:`<div class="empty">Save patterns you want to sew next. <a href="#/patterns">Browse patterns</a></div>`}
+  <h2 style="margin-top:32px">Following</h2>
+  ${follows.length?follows.map(designerRow).join(""):`<div class="empty">Follow designers to see their new patterns. <a href="#/designers">See designers</a></div>`}
+  <p class="demo-note">This is a test version. Your data is saved only in this browser. <button class="btn small ghost" id="resetBtn">Reset demo data</button></p>`;
+}
+
+/* ---------- Router ---------- */
+function render(){
+  const [, route="patterns", id] = (location.hash || "#/patterns").split("/");
+  const app = document.getElementById("app");
+  const views = {patterns:viewPatterns, pattern:()=>viewPattern(id), makes:viewMakes, designers:viewDesigners, designer:()=>viewDesigner(id), me:viewMe};
+  app.innerHTML = (views[route] || viewPatterns)();
+  const tabFor = {pattern:"patterns", designer:"designers"}[route] || route;
+  document.querySelectorAll(".tabs a").forEach(a=>a.classList.toggle("on", a.dataset.r===tabFor));
+  if(route==="patterns" || !views[route]) renderPatternResults();
+}
+window.addEventListener("hashchange", ()=>{ render(); window.scrollTo(0,0); });
+
+/* ---------- Events ---------- */
+document.getElementById("app").addEventListener("input", e=>{
+  const map = {fq:"q",ftype:"type",fskill:"skill",ffabric:"fabric",fprice:"price"};
+  if(map[e.target.id]){ filters[map[e.target.id]] = e.target.value; renderPatternResults(); }
+});
+document.addEventListener("click", e=>{
+  const t = e.target.closest("button"); if(!t) return;
+  if(t.dataset.close!==undefined){ t.closest("dialog").close(); return; }
+  if(t.dataset.like){ requireUser(()=>{ const i=state.liked.indexOf(t.dataset.like); i<0?state.liked.push(t.dataset.like):state.liked.splice(i,1); save(); render(); }); }
+  if(t.dataset.save){ requireUser(()=>{ const id=t.dataset.save, i=state.saved.indexOf(id); if(i<0){state.saved.push(id);toast("Added to your sewing queue");}else{state.saved.splice(i,1);toast("Removed from your queue");} save(); render(); }); }
+  if(t.dataset.follow){ requireUser(()=>{ const id=t.dataset.follow, i=state.following.indexOf(id); if(i<0){state.following.push(id);toast("Following "+des(id).name);}else{state.following.splice(i,1);} save(); render(); }); }
+  if(t.dataset.buy){ const p=pat(t.dataset.buy); toast(p.price?"Checkout isn't connected in this test version":"Downloads aren't connected in this test version"); }
+  if(t.dataset.addfor!==undefined){ openMake(t.dataset.addfor); }
+  if(t.id==="joinBtn"){ requireUser(render); }
+  if(t.id==="resetBtn"){ if(confirm("Delete your demo makes, queue and follows?")){ try{localStorage.removeItem(KEY);}catch(err){} state=load(); render(); } }
+});
+document.getElementById("addBtn").addEventListener("click", ()=>openMake(""));
+
+document.getElementById("nameForm").addEventListener("submit", e=>{
+  e.preventDefault();
+  const name = e.target.name.value.trim().replace(/\s+/g,"").slice(0,24);
+  if(!name) return;
+  state.user = name; save(); e.target.closest("dialog").close(); e.target.reset();
+  toast("Welcome, @"+name);
+  const fn = pendingAfterJoin; pendingAfterJoin = null; fn ? fn() : render();
+});
+
+function openMake(patternId){
+  requireUser(()=>{
+    const f = document.getElementById("makeForm");
+    f.patternId.innerHTML = `<option value="">Choose a pattern</option>` + PATTERNS.map(p=>`<option value="${p.id}" ${p.id===patternId?"selected":""}>${esc(p.name)} (${esc(des(p.d).name)})</option>`).join("");
+    document.getElementById("makeDlg").showModal();
+  });
+}
+function resizeImage(file){
+  return new Promise((res,rej)=>{
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = ()=>{ const s=Math.min(1,700/Math.max(img.width,img.height)); const c=document.createElement("canvas");
+      c.width=Math.round(img.width*s); c.height=Math.round(img.height*s); c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+      URL.revokeObjectURL(url); res(c.toDataURL("image/jpeg",.75)); };
+    img.onerror = rej; img.src = url;
+  });
+}
+const PALETTE = [sw("dots","#5B7DB1","#E6EEF9"),sw("stripe","#B0542C","#FBE9DF"),sw("gingham","#3F7D4E","#E3F1E6"),sw("solid","#8C6BB1","#8C6BB1"),sw("stripe","#C9A227","#FFF6D6")];
+document.getElementById("makeForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const f = e.target, btn = document.getElementById("saveMakeBtn");
+  btn.disabled = true; btn.textContent = "Saving…";
+  let photo = null;
+  if(f.photo.files[0]){ try{ photo = await resizeImage(f.photo.files[0]); }catch(err){ toast("That photo couldn't be read. Saved without it."); } }
+  const make = {id:"u"+Date.now(), user:state.user, patternId:f.patternId.value, title:f.title.value.trim(), size:f.size.value.trim(), fabric:f.fabric.value.trim(), notes:f.notes.value.trim(), likes:0, photo, sw:PALETTE[Math.floor(Math.random()*PALETTE.length)]};
+  state.makes.unshift(make);
+  if(!save()){ make.photo = null; if(!save()){ state.makes.shift(); toast("Storage is full. Reset demo data to add more."); } else toast("Saved without the photo: browser storage is full"); }
+  else toast("Make saved");
+  btn.disabled = false; btn.textContent = "Save make";
+  f.reset(); document.getElementById("makeDlg").close();
+  location.hash = "#/pattern/"+make.patternId; render();
+});
+
+render();
+</script>
+</body>
+</html>
